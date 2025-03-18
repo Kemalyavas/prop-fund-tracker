@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load tracker_tags %}
+
+{% block title %}Challenge Silme Onayı - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Anasayfa</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'challenge_detail' challenge.id %}">Challenge Detayı</a></li>
+          <li class="breadcrumb-item active">Sil</li>
+        </ol>
+      </nav>
+
+      <div class="card shadow border-0">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>Challenge Silme Onayı
+          </h5>
+        </div>
+        
+        <div class="card-body p-4">
+          <div class="alert alert-warning mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Dikkat!</strong> Bu işlem geri alınamaz. Challenge'a ait tüm işlemler de silinecektir.
+          </div>
+          
+          <p class="mb-4">Aşağıdaki challenge'ı silmek üzeresiniz:</p>
+          
+          <div class="card mb-4 bg-light">
+            <div class="card-body">
+              <h6 class="mb-3">{{ challenge.challenge_type.provider.name }} - {{ challenge.challenge_type.name }}</h6>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Hesap Büyüklüğü:</strong></p>
+                  <p>${{ challenge.challenge_type.account_size|floatformat:0 }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Durum:</strong></p>
+                  <span class="badge status-{{ challenge.status|lower }}">
+                    {{ challenge.get_status_display }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Başlangıç Tarihi:</strong></p>
+                  <p>{{ challenge.start_date }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Mevcut Bakiye:</strong></p>
+                  <p>${{ challenge.current_balance|floatformat:2 }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center">
+              <a href="{% url 'challenge_detail' challenge.id %}" class="btn btn-secondary me-2">
+                <i class="fas fa-times me-1"></i>İptal
+              </a>
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash-alt me-1"></i>Evet, Challenge'ı Sil
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

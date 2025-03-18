@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profilim - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row mb-4">
+    <div class="col-lg-8">
+      <h1 class="h3 mb-2 text-gray-800">
+        <i class="fas fa-user-circle me-2 text-primary"></i>Profilim
+      </h1>
+      <p class="mb-4 text-muted">
+        Hesap bilgilerinizi görüntüleyebilir ve düzenleyebilirsiniz.
+      </p>
+    </div>
+    <div class="col-lg-4 text-lg-end d-flex align-items-center justify-content-lg-end">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Anasayfa</a></li>
+          <li class="breadcrumb-item active">Profilim</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-id-card me-2"></i>Profil Özeti
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="mb-4">
+            <div class="avatar-circle mx-auto">
+              <span class="avatar-initials">{{ request.user.username|first|upper }}</span>
+            </div>
+          </div>
+          <h5 class="mb-0">{{ request.user.get_full_name|default:request.user.username }}</h5>
+          <p class="text-muted">{{ request.user.email|default:"E-posta belirtilmemiş" }}</p>
+          
+          <hr>
+          
+          <div class="row text-center">
+            <div class="col-6 border-end">
+              <h5 class="mb-0">{{ challenges_count }}</h5>
+              <small class="text-muted">Challenge</small>
+            </div>
+            <div class="col-6">
+              <h5 class="mb-0">{{ trades_count }}</h5>
+              <small class="text-muted">İşlem</small>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="text-start">
+            <p><strong>Kullanıcı Adı:</strong> {{ request.user.username }}</p>
+            <p><strong>Son Giriş:</strong> {{ request.user.last_login|date:"d.m.Y H:i" }}</p>
+            <p><strong>Katılma Tarihi:</strong> {{ request.user.date_joined|date:"d.m.Y" }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-edit me-2"></i>Profil Bilgilerimi Düzenle
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+          
+          <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                {{ form.username|as_crispy_field }}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.email|as_crispy_field }}
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                {{ form.first_name|as_crispy_field }}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.last_name|as_crispy_field }}
+              </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Değişiklikleri Kaydet
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card shadow border-0 mt-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-shield-alt me-2"></i>Hesap Güvenliği
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">Şifre</h6>
+              <p class="text-muted mb-0">Güvenliğiniz için şifrenizi düzenli olarak değiştirin.</p>
+            </div>
+            <a href="#" class="btn btn-outline-primary" onclick="alert('Şifre değiştirme özelliği yakında eklenecek!')">
+              <i class="fas fa-key me-2"></i>Şifremi Değiştir
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-circle {
+  width: 100px;
+  height: 100px;
+  background-color: #6c757d;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-initials {
+  font-size: 2.5rem;
+  color: white;
+  font-weight: bold;
+}
+</style>
+{% endblock %}

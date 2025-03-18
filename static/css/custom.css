@@ -1,0 +1,52 @@
+/* Kart yükseklikleri */
+.card {
+  height: 100%;
+}
+
+/* Badge'ler için düzenleme */
+.badge {
+  font-weight: 500;
+  padding: 0.4em 0.7em;
+}
+
+/* Tablo düzenlemeleri */
+.table td {
+  vertical-align: middle;
+}
+
+/* Responsive iyileştirmeler */
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+
+  .container-md {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* Sembol stillerinde düzenleme */
+.d-flex .badge {
+  flex-shrink: 0;
+}
+
+/* Vurgu renkleri */
+.bg-success-light {
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+.bg-danger-light {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Form elementleri */
+.form-control {
+  font-size: 0.9rem;
+}
+
+/* Login/Register ekranı */
+.login-card {
+  max-width: 450px;
+  margin: 0 auto;
+}

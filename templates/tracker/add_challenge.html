@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load tracker_tags %}
+{% block title %}Yeni Challenge Ekle - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Yeni Challenge Ekle</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" id="challengeForm">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+              <strong>Hata:</strong> Lütfen formdaki hataları düzeltin.
+            </div>
+            {% endif %}
+
+            <div class="row mb-4">
+              <div class="col-12">
+                <label class="form-label fw-bold">Firma Seçiniz</label>
+                <select class="form-select form-select-lg" name="provider" disabled>
+                  <option value="fxify" selected>Fxify</option>
+                </select>
+                <input type="hidden" name="provider" value="fxify">
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Aşama Sayısı</label>
+                <select class="form-select form-select-lg" id="stageSelect" name="stage_count">
+                  <option value="1">Bir Aşamalı</option>
+                  <option value="2">İki Aşamalı</option>
+                  <option value="3">Üç Aşamalı</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Hesap Büyüklüğü</label>
+                <select class="form-select form-select-lg" id="accountSizeSelect" name="account_size">
+                  <option value="5000">5.000 $</option>
+                  <option value="10000">10.000 $</option>
+                  <option value="15000">15.000 $</option>
+                  <option value="25000">25.000 $</option>
+                  <option value="50000">50.000 $</option>
+                  <option value="100000">100.000 $</option>
+                  <option value="200000">200.000 $</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-12">
+                <label class="form-label fw-bold">Başlangıç Tarihi</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="fas fa-calendar-alt"></i></span>
+                  <input type="date" class="form-control form-control-lg" name="start_date" value="{% now 'Y-m-d' %}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden field for challenge_type -->
+            <input type="hidden" name="challenge_type" id="challengeTypeField">
+
+            <div class="card mb-4 bg-light">
+              <div class="card-body">
+                <h5 class="card-title">Challenge Kuralları</h5>
+                <div id="oneStageRules">
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-light d-flex justify-content-between">
+                      <span>Kar Hedefi:</span>
+                      <span class="fw-bold">%10</span>
+                    </li>
+                    <li class="list-group-item bg-light d-flex justify-content-between">
+                      <span>Günlük Maksimum Kayıp:</span>
+                      <span class="fw-bold">%3</span>
+                    </li>
+                    <li class="list-group-item bg-light d-flex justify-content-between">
+                      <span>Toplam Maksimum Kayıp:</span>
+                      <span class="fw-bold">%6</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div id="twoStageRules" style="display:none;">
+                  <div class="mb-3">
+                    <h6 class="text-primary">1. Aşama</h6>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Kar Hedefi:</span>
+                        <span class="fw-bold">%10</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Günlük Maksimum Kayıp:</span>
+                        <span class="fw-bold">%4</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Toplam Maksimum Kayıp:</span>
+                        <span class="fw-bold">%10</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h6 class="text-primary">2. Aşama</h6>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Kar Hedefi:</span>
+                        <span class="fw-bold">%5</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Günlük Maksimum Kayıp:</span>
+                        <span class="fw-bold">%4</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Toplam Maksimum Kayıp:</span>
+                        <span class="fw-bold">%10</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div id="threeStageRules" style="display:none;">
+                  <div class="mb-3">
+                    <h6 class="text-primary">Tüm Aşamalar</h6>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Kar Hedefi:</span>
+                        <span class="fw-bold">%5</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Günlük Maksimum Kayıp:</span>
+                        <span class="fw-bold">%5</span>
+                      </li>
+                      <li class="list-group-item bg-light d-flex justify-content-between">
+                        <span>Toplam Maksimum Kayıp:</span>
+                        <span class="fw-bold">%5</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Challenge Ekle
+              </button>
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">İptal</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Aşama sayısı değiştiğinde kuralları güncelle
+    const stageSelect = document.getElementById('stageSelect');
+    const oneStageRules = document.getElementById('oneStageRules');
+    const twoStageRules = document.getElementById('twoStageRules');
+    const threeStageRules = document.getElementById('threeStageRules');
+    const challengeTypeField = document.getElementById('challengeTypeField');
+    const accountSizeSelect = document.getElementById('accountSizeSelect');
+    
+    function updateRules() {
+      // Tüm kural kutuları gizle
+      oneStageRules.style.display = 'none';
+      twoStageRules.style.display = 'none';
+      threeStageRules.style.display = 'none';
+      
+      // Seçilen aşamaya göre ilgili kutu göster
+      const stageCount = stageSelect.value;
+      if (stageCount === '1') {
+        oneStageRules.style.display = 'block';
+      } else if (stageCount === '2') {
+        twoStageRules.style.display = 'block';
+      } else if (stageCount === '3') {
+        threeStageRules.style.display = 'block';
+      }
+      
+      // Challenge tipini güncelle
+      updateChallengeType();
+    }
+    
+    function updateChallengeType() {
+      const stageCount = stageSelect.value;
+      const accountSize = accountSizeSelect.value;
+      
+      // challenge_type alanını güncelle
+      // Bu ID gerçek bir challenge type ID'si olmalıdır,
+      // backend tarafında işlenmek üzere bir değer atanıyor
+      challengeTypeField.value = `${stageCount}_${accountSize}`;
+    }
+    
+    stageSelect.addEventListener('change', updateRules);
+    accountSizeSelect.addEventListener('change', updateChallengeType);
+    
+    // Sayfa yüklendiğinde kuralları ve challenge tipini ayarla
+    updateRules();
+  });
+</script>
+{% endblock %}

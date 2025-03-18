@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% load tracker_tags %}
+
+{% block title %}{{ challenge.challenge_type.name }} - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-md py-4">
+  <!-- Üst bölüm: Challenge başlık ve durumu -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Anasayfa</a></li>
+          <li class="breadcrumb-item active">{{ challenge.challenge_type.name }}</li>
+        </ol>
+      </nav>
+      <h1 class="h3 mb-0">{{ challenge.challenge_type.provider.name }} - {{ challenge.challenge_type.name }}</h1>
+    </div>
+    <div class="d-flex align-items-center">
+      <!-- Durumu sadece burada gösteriyoruz -->
+      <span class="badge status-{{ challenge.status|lower }} fs-6 me-3">
+        {{ challenge.get_status_display }}
+      </span>
+      
+      <!-- İşlem ekle ve silme butonları -->
+      <div class="btn-group">
+        <a href="{% url 'add_trade' challenge.id %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus-circle me-1"></i>İşlem Ekle
+        </a>
+        <a href="{% url 'delete_challenge' challenge.id %}" class="btn btn-danger btn-sm">
+            <i class="fas fa-trash-alt me-1"></i>Sil
+          </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Challenge özet kartları -->
+  <div class="row mb-4">
+    <!-- Challenge detayları kartı -->
+    <div class="col-md-6">
+      <div class="card shadow h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 text-primary">
+            <i class="fas fa-info-circle me-2"></i>Challenge Detayları
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Hesap Büyüklüğü</p>
+              <h5>${{ challenge.challenge_type.account_size|floatformat:0 }}</h5>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Fiyat</p>
+              <h5>${{ challenge.challenge_type.price|floatformat:0 }}</h5>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Başlangıç Tarihi</p>
+              <h5>{{ challenge.start_date }}</h5>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Kalan Gün</p>
+              <h5>{{ challenge.days_remaining }} gün</h5>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Maksimum Günlük Kayıp</p>
+              <h5>${{ challenge.challenge_type.daily_loss_limit|floatformat:0 }}</h5>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Toplam Kayıp Limiti</p>
+              <h5>${{ challenge.challenge_type.overall_loss_limit|floatformat:0 }}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Challenge durumu kartı -->
+    <div class="col-md-6">
+      <div class="card shadow h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 text-primary">
+            <i class="fas fa-chart-line me-2"></i>Challenge İlerlemesi
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Mevcut Bakiye</p>
+              <h5>${{ challenge.current_balance|floatformat:2 }}</h5>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">Kar/Zarar</p>
+              <h5 class="{% if challenge.profit > 0 %}text-success{% elif challenge.profit < 0 %}text-danger{% endif %}">
+                {% if challenge.profit > 0 %}+{% endif %}${{ challenge.profit|floatformat:2 }}
+                <small>({{ challenge.profit_percentage|floatformat:2 }}%)</small>
+              </h5>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">En Yüksek Bakiye</p>
+              <h5>${{ challenge.highest_balance|floatformat:2 }}</h5>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1 small text-muted">En Düşük Bakiye</p>
+              <h5>${{ challenge.lowest_balance|floatformat:2 }}</h5>
+            </div>
+          </div>
+          
+         <!-- Kar Hedefi İlerlemesi - TAMAMEN DÜZELTİLMİŞ -->
+<div class="mt-4">
+  <p class="mb-1 small text-muted">Kar Hedefi İlerlemesi</p>
+  <div class="progress" style="height: 20px;">
+    {% with initial_balance=challenge.challenge_type.account_size %}
+    {% with profit_target_pct=challenge.challenge_type.profit_target %}
+    {% with target_amount=initial_balance|multiply:profit_target_pct|divide:100 %}
+    
+    <!-- Mevcut kar hesapla -->
+    {% with current_profit=challenge.current_balance|subtract:initial_balance %}
+    {% with progress_percentage=current_profit|divide:target_amount|multiply:100 %}
+    
+    <div class="progress-bar {% if current_profit < 0 %}bg-danger{% else %}bg-success{% endif %}" 
+         role="progressbar" 
+         style="width: {{ progress_percentage|default:0|maximum:0|minimum:100 }}%;" 
+         aria-valuenow="{{ current_profit|floatformat:0 }}" 
+         aria-valuemin="0" 
+         aria-valuemax="{{ target_amount|floatformat:0 }}">
+      {% if progress_percentage > 0 %}+{% endif %}{{ progress_percentage|floatformat:1 }}%
+    </div>
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+  </div>
+  
+  <!-- İlerleme göstergeleri - DÜZELTILMIŞ -->
+  <div class="d-flex justify-content-between mt-2">
+    <small>$0</small>
+    <small>${{ target_amount|divide:2|floatformat:0 }}</small>
+    <small>${{ target_amount|floatformat:0 }}</small>
+  </div>
+</div>
+
+<!-- Challenge Özet Bilgileri kısmına ekleyin -->
+<div class="row mb-3">
+  <!-- ...diğer bilgiler... -->
+  
+  <!-- Sadece fonlanmış challenge'lar için payout bilgisini göster -->
+  {% if challenge.status == 'FUNDED' %}
+<div class="col-md-6">
+  <p class="mb-1 small text-muted">Tahmini Payout (%{{ challenge.profit_share_percentage|default:80 }} kar payı)</p>
+  <h5 class="text-success">${{ challenge.calculate_payout|floatformat:2 }}</h5>
+</div>
+{% endif %}
+</div>
+
+<!-- Kayıp Limitleri -->
+<div class="mt-4">
+  <!-- Maksimum Günlük Kayıp -->
+  <div class="mb-3">
+    <p class="mb-1 small text-muted">Maksimum Günlük Kayıp</p>
+    <div class="progress" style="height: 20px;">
+      {% with initial_balance=challenge.challenge_type.account_size %}
+      {% with daily_loss=challenge.challenge_type.max_daily_loss %}
+      {% with daily_loss_amount=initial_balance|multiply:daily_loss|divide:100 %}
+      
+      <!-- En düşük günlük değeri hesapla -->
+      {% with lowest_daily=challenge.lowest_balance|default:initial_balance %}
+      {% with daily_loss_pct=lowest_daily|subtract:initial_balance|divide:initial_balance|multiply:100 %}
+      {% with daily_progress=daily_loss_pct|divide:daily_loss|negative|multiply:100|minimum:100|maximum:0 %}      
+      <div class="progress-bar bg-danger" 
+           role="progressbar" 
+           style="width: {{ daily_progress|default:0 }}%;" 
+           aria-valuenow="{{ daily_loss_pct|floatformat:1 }}" 
+           aria-valuemin="-{{ daily_loss }}" 
+           aria-valuemax="0">
+        {{ daily_progress|floatformat:1 }}%
+      </div>
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+    </div>
+    
+    <div class="d-flex justify-content-between mt-2">
+      <small>Limit: -{{ challenge.challenge_type.max_daily_loss }}%</small>
+      <small>Kalan: {{ challenge.lowest_balance|default:challenge.challenge_type.account_size|subtract:challenge.challenge_type.account_size|divide:challenge.challenge_type.account_size|multiply:100|floatformat:1 }}%</small>
+    </div>
+  </div>
+  
+  <!-- Toplam Kayıp Limiti -->
+  <div>
+    <p class="mb-1 small text-muted">Toplam Kayıp Limiti</p>
+    <div class="progress" style="height: 20px;">
+      {% with initial_balance=challenge.challenge_type.account_size %}
+      {% with total_loss=challenge.challenge_type.max_total_loss %}
+      {% with total_loss_amount=initial_balance|multiply:total_loss|divide:100 %}
+      
+      <!-- Mevcut kaybı hesapla -->
+      {% with current_loss_pct=challenge.profit_percentage %}
+      {% with total_progress=current_loss_pct|divide:total_loss|negative|multiply:100|minimum:100|maximum:0 %}
+      
+      <div class="progress-bar bg-danger" 
+           role="progressbar" 
+           style="width: {{ total_progress|default:0 }}%;" 
+           aria-valuenow="{{ current_loss_pct|floatformat:1 }}" 
+           aria-valuemin="-{{ total_loss }}" 
+           aria-valuemax="0">
+        {{ total_progress|floatformat:1 }}%
+      </div>
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+    </div>
+    
+    <div class="d-flex justify-content-between mt-2">
+      <small>Limit: -{{ challenge.challenge_type.max_total_loss }}%</small>
+      <small>Mevcut: {{ challenge.profit_percentage|floatformat:1 }}%</small>
+    </div>
+  </div>
+</div>
+          
+          <!-- Aşama ilerleme çubuğu - Burada durumu göstermiyoruz, sadece görsel -->
+          {% if '2 Stage' in challenge.challenge_type.name or '3 Stage' in challenge.challenge_type.name %}
+            <div class="mt-4">
+              <p class="mb-1 small text-muted">Aşama İlerlemesi</p>
+              <div class="progress mb-3">
+                {% if '2 Stage' in challenge.challenge_type.name %}
+                  <div class="progress-bar {% if challenge.current_stage > 1 %}bg-success{% else %}bg-info{% endif %}" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                    1. Aşama {% if challenge.current_stage > 1 %} ✓ {% endif %}
+                  </div>
+                  <div class="progress-bar {% if challenge.status == 'COMPLETED' %}bg-success{% else %}{% if challenge.current_stage > 1 %}bg-info{% else %}bg-secondary{% endif %}{% endif %}" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                    2. Aşama {% if challenge.status == 'COMPLETED' %} ✓ {% endif %}
+                  </div>
+                {% elif '3 Stage' in challenge.challenge_type.name %}
+                  <div class="progress-bar {% if challenge.current_stage > 1 %}bg-success{% else %}bg-info{% endif %}" role="progressbar" style="width: 33.3%" aria-valuenow="33.3" aria-valuemin="0" aria-valuemax="100">
+                    1. Aşama {% if challenge.current_stage > 1 %} ✓ {% endif %}
+                  </div>
+                  <div class="progress-bar {% if challenge.current_stage > 2 %}bg-success{% else %}{% if challenge.current_stage > 1 %}bg-info{% else %}bg-secondary{% endif %}{% endif %}" role="progressbar" style="width: 33.3%" aria-valuenow="33.3" aria-valuemin="0" aria-valuemax="100">
+                    2. Aşama {% if challenge.current_stage > 2 %} ✓ {% endif %}
+                  </div>
+                  <div class="progress-bar {% if challenge.status == 'COMPLETED' %}bg-success{% else %}{% if challenge.current_stage > 2 %}bg-info{% else %}bg-secondary{% endif %}{% endif %}" role="progressbar" style="width: 33.4%" aria-valuenow="33.4" aria-valuemin="0" aria-valuemax="100">
+                    3. Aşama {% if challenge.status == 'COMPLETED' %} ✓ {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+              
+              <!-- Aşama tamamlanma tarihleri -->
+              {% if challenge.stage1_completion_date %}
+                <p class="small text-muted">1. Aşama tamamlanma: {{ challenge.stage1_completion_date }}</p>
+              {% endif %}
+              {% if challenge.stage2_completion_date %}
+                <p class="small text-muted">2. Aşama tamamlanma: {{ challenge.stage2_completion_date }}</p>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- İşlemler tablosu -->
+  <div class="card shadow border-0 mt-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 text-primary">
+        <i class="fas fa-exchange-alt me-2"></i>İşlemler
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      {% if trades %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Sembol</th>
+                <th>Tip</th>
+                <th>Lot</th>
+                <th>Giriş Fiyatı</th>
+                <th>Çıkış Fiyatı</th>
+                <th>Giriş Tarihi</th>
+                <th>Çıkış Tarihi</th>
+                <th>Sonuç</th>
+                <th>Kar/Zarar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for trade in trades %}
+                <tr class="{% if trade.trade_result == 'TP' %}bg-success-light{% elif trade.trade_result == 'SL' %}bg-danger-light{% endif %}">
+                  <td>{{ trade.symbol }}</td>
+                  <td>
+                    <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                      {{ trade.get_trade_type_display }}
+                    </span>
+                  </td>
+                  <td>{{ trade.lot_size }}</td>
+                  <td>{{ trade.entry_price }}</td>
+                  <td>{{ trade.exit_price|default:"-" }}</td>
+                  <td>{{ trade.entry_date }}</td>
+                  <td>{{ trade.exit_date|default:"-" }}</td>
+                  <td>
+                    {% if trade.trade_result == 'TP' %}
+                      <span class="badge bg-success">TP Oldum</span>
+                    {% elif trade.trade_result == 'SL' %}
+                      <span class="badge bg-danger">Stop Oldum</span>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if trade.profit_loss > 0 %}
+                      <span class="text-success">+${{ trade.profit_loss }}</span>
+                    {% elif trade.profit_loss < 0 %}
+                      <span class="text-danger">-${{ trade.profit_loss|abs }}</span>
+                    {% else %}
+                      <span class="text-secondary">$0.00</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-4">
+          <img src="/static/img/empty-trades.svg" alt="Henüz İşlem Yok" style="height: 120px" class="mb-3">
+          <h5>Henüz İşlem Yok</h5>
+          <p class="text-muted">Challenge için ilk işleminizi ekleyin.</p>
+          <a href="{% url 'add_trade' challenge.id %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-1"></i>İşlem Ekle
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

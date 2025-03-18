@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Kayıt Ol - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="fas fa-user-plus me-2"></i>Yeni Hesap Oluştur
+          </h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Kullanıcı adı alanı -->
+            <div class="mb-3">
+              <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+              {{ form.username }}
+              {% if form.username.errors %}
+              <div class="text-danger small">
+                {{ form.username.errors }}
+              </div>
+              {% endif %}
+              {% if form.username.help_text %}
+              <div class="form-text text-muted small">
+                {{ form.username.help_text }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- E-posta alanı (bu kısım eksikti) -->
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+              {{ form.email }}
+              {% if form.email.errors %}
+              <div class="text-danger small">
+                {{ form.email.errors }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Şifre alanları -->
+            <div class="mb-3">
+              <label for="{{ form.password1.id_for_label }}" class="form-label">{{ form.password1.label }}</label>
+              {{ form.password1 }}
+              {% if form.password1.errors %}
+              <div class="text-danger small">
+                {{ form.password1.errors }}
+              </div>
+              {% endif %}
+              {% if form.password1.help_text %}
+              <div class="form-text text-muted small">
+                {{ form.password1.help_text }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.password2.id_for_label }}" class="form-label">{{ form.password2.label }}</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}
+              <div class="text-danger small">
+                {{ form.password2.errors }}
+              </div>
+              {% endif %}
+              {% if form.password2.help_text %}
+              <div class="form-text text-muted small">
+                {{ form.password2.help_text }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Kayıt Ol
+              </button>
+              <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-sign-in-alt me-2"></i>Giriş Sayfasına Dön
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

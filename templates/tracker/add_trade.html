@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}İşlem Ekle - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-md py-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-plus-circle me-2"></i>İşlem Ekle
+      </h1>
+      <p class="text-muted">{{ challenge.challenge_type.name }} için yeni işlem kaydı</p>
+    </div>
+  </div>
+  
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">İşlem Bilgileri</h6>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row gx-4">
+          <div class="col-md-6 mb-3">
+            {{ form.symbol|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.trade_type|as_crispy_field }}
+          </div>
+        </div>
+        
+        <div class="row gx-4">
+          <div class="col-md-4 mb-3">
+            {{ form.lot_size|as_crispy_field }}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.entry_price|as_crispy_field }}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.exit_price|as_crispy_field }}
+          </div>
+        </div>
+        
+        <div class="row gx-4">
+          <div class="col-md-6 mb-3">
+            {{ form.entry_date|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.exit_date|as_crispy_field }}
+          </div>
+        </div>
+        
+        <div class="row gx-4">
+          <div class="col-md-6 mb-3">
+            {{ form.trade_result|as_crispy_field }}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.profit_loss_percentage|as_crispy_field }}
+          </div>
+        </div>
+        
+        <div class="row gx-4" id="customResultRow" style="display: none;">
+          <div class="col-md-12 mb-3">
+            {{ form.custom_result|as_crispy_field }}
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-end">
+          <a href="{% url 'challenge_detail' challenge.id %}" class="btn btn-secondary me-2">İptal</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>İşlemi Kaydet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tradeResultSelect = document.getElementById('id_trade_result');
+    const customResultRow = document.getElementById('customResultRow');
+    const customResultField = document.getElementById('id_custom_result');
+    
+    function updateCustomResultVisibility() {
+      if(tradeResultSelect.value === 'CUSTOM') {
+        // Özel seçildiğinde göster
+        customResultRow.style.display = 'block';
+        customResultField.style.display = '';
+        customResultField.disabled = false;
+        customResultField.focus(); // Otomatik odaklan
+      } else {
+        // Diğer seçeneklerde gizle
+        customResultRow.style.display = 'none';
+        customResultField.disabled = true;
+      }
+    }
+    
+    // İşlem sonucu değiştiğinde ve sayfa yüklendiğinde çalıştır
+    tradeResultSelect.addEventListener('change', updateCustomResultVisibility);
+    
+    // Sayfa yüklendiğinde çağrılacak
+    updateCustomResultVisibility();
+  });
+</script>
+{% endblock content %}

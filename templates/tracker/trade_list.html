@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% load tracker_tags %}
+
+{% block title %}İşlemlerim - Fon Takip Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-md py-4">
+  <div class="row mb-4">
+    <div class="col-lg-8">
+      <h1 class="h3 mb-2 text-gray-800">
+        <i class="fas fa-chart-line me-2 text-primary"></i>İşlemlerim
+      </h1>
+      <p class="mb-4 text-muted">
+        Tüm işlemlerinizi görüntüleyebilir, filtreleyebilir ve yönetebilirsiniz.
+      </p>
+    </div>
+    <div class="col-lg-4 text-lg-end d-flex align-items-center justify-content-lg-end">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Anasayfa</a></li>
+          <li class="breadcrumb-item active">İşlemlerim</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+  
+  <div class="card shadow border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+      <h6 class="m-0 font-weight-bold text-primary">
+        <i class="fas fa-filter me-1"></i>İşlem Filtresi
+      </h6>
+    </div>
+    
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-4">
+          <label for="challenge_id" class="form-label">Challenge</label>
+          <select name="challenge_id" id="challenge_id" class="form-select">
+            <option value="">Tüm Challenge'lar</option>
+            {% for challenge in challenges %}
+              <option value="{{ challenge.id }}" {% if selected_challenge_id == challenge.id %}selected{% endif %}>
+                {{ challenge.challenge_type.name }} 
+                ({% if challenge.status == 'ACTIVE' %}Aktif
+                {% elif challenge.status == 'COMPLETED' %}Tamamlandı
+                {% elif challenge.status == 'FAILED' %}Başarısız
+                {% elif challenge.status == 'FUNDED' %}Fonlandı
+                {% endif %})
+                &nbsp; {{ profit_percentage_by_challenge|get_item:challenge.id|default:0|floatformat:2 }}%
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-8 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary me-2">
+            <i class="fas fa-search me-1"></i>Filtrele
+          </button>
+          {% if selected_challenge_id %}
+            <a href="{% url 'add_trade' selected_challenge_id %}" class="btn btn-success">
+              <i class="fas fa-plus-circle me-1"></i>Yeni İşlem Ekle
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  {% if trades %}
+    <div class="card shadow border-0">
+      <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-list me-1"></i>İşlem Listesi
+        </h6>
+        <div class="dropdown no-arrow">
+          <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuLink">
+            <li><a class="dropdown-item" href="#" id="exportCSV">
+              <i class="fas fa-file-csv me-1"></i>CSV İndir
+            </a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="border-top-0" style="min-width: 130px;">Challenge</th>
+                <th class="border-top-0" style="min-width: 90px;">Sembol</th>
+                <th class="border-top-0" style="min-width: 80px;">İşlem Tipi</th>
+                <th class="border-top-0" style="min-width: 100px;">Giriş Tarihi</th>
+                <th class="border-top-0" style="min-width: 100px;">Çıkış Tarihi</th>
+                <th class="border-top-0" style="width: 70px;">Lot</th>
+                <th class="border-top-0" style="min-width: 110px;">Giriş Fiyatı</th>
+                <th class="border-top-0" style="min-width: 110px;">Çıkış Fiyatı</th>
+                <th class="border-top-0" style="min-width: 90px;">Sonuç</th>
+                <th class="border-top-0" style="min-width: 100px;">Kar/Zarar</th>
+                <th class="border-top-0" style="min-width: 100px;">Kar/Zarar %</th>
+                <th class="border-top-0" style="width: 80px;">İşlemler</th>
+              </tr>
+            </thead>
+            <!-- ... tbody içeriği aynı kalacak ... -->
+          </table>
+            <tbody>
+              {% for trade in trades %}
+                <tr class="{% if trade.trade_result == 'TP' %}bg-success-light{% elif trade.trade_result == 'SL' %}bg-danger-light{% endif %}">
+                  <td>
+                    <a href="{% url 'challenge_detail' trade.challenge.id %}" class="text-decoration-none">
+                      {{ trade.challenge.challenge_type.name }}
+                    </a>
+                  </td>
+                  <td><span class="badge bg-secondary">{{ trade.symbol }}</span></td>
+                  <td>
+                    {% if trade.trade_type == 'BUY' %}
+                      <span class="badge bg-success">LONG</span>
+                    {% else %}
+                      <span class="badge bg-danger">SHORT</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ trade.entry_date|date:"d.m.Y" }}</td>
+                  <td>{{ trade.exit_date|date:"d.m.Y"|default:"-" }}</td>
+                  <td>{{ trade.lot_size }}</td>
+                  <td>${{ trade.entry_price|floatformat:4 }}</td>
+                  <td>${{ trade.exit_price|floatformat:4|default:"-" }}</td>
+                  <td>
+                    {% if trade.trade_result == 'TP' %}
+                      <span class="badge bg-success">TP Oldum</span>
+                    {% elif trade.trade_result == 'SL' %}
+                      <span class="badge bg-danger">Stop Oldum</span>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if trade.profit_loss > 0 %}
+                      <span class="text-success fw-bold">+${{ trade.profit_loss|floatformat:2 }}</span>
+                    {% elif trade.profit_loss < 0 %}
+                      <span class="text-danger fw-bold">-${{ trade.profit_loss|abs|floatformat:2 }}</span>
+                    {% else %}
+                      <span class="text-secondary">$0.00</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if trade.profit_loss_percentage %}
+                      {% if trade.profit_loss > 0 %}
+                        <span class="text-success fw-bold">+{{ trade.profit_loss_percentage|floatformat:2 }}%</span>
+                      {% elif trade.profit_loss < 0 %}
+                        <span class="text-danger fw-bold">-{{ trade.profit_loss_percentage|abs|floatformat:2 }}%</span>
+                      {% else %}
+                        <span class="text-secondary">0.00%</span>
+                      {% endif %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <a href="{% url 'update_trade' trade.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-info shadow-sm">
+      <i class="fas fa-info-circle me-2"></i>
+      {% if selected_challenge_id %}
+        Seçili challenge için henüz hiç işlem girilmemiş. 
+        <a href="{% url 'add_trade' selected_challenge_id %}" class="alert-link">Hemen ilk işleminizi ekleyin</a>.
+      {% else %}
+        Henüz hiç işlem kaydınız bulunmuyor. İşlem eklemek için önce bir challenge seçin.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // CSV indirme fonksiyonu
+  document.getElementById('exportCSV').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Table verilerini CSV formatına dönüştürme
+    let csv = [];
+    const rows = document.querySelectorAll('table tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      let row = [], cols = rows[i].querySelectorAll('td, th');
+      
+      for (let j = 0; j < cols.length; j++) {
+        // Son sütunu (İşlemler) çıkar
+        if (j < cols.length - 1) {
+          // HTML taglarını çıkar ve virgülle çevreleme
+          let text = cols[j].innerText.replace(/"/g, '""');
+          row.push('"' + text + '"');
+        }
+      }
+      
+      csv.push(row.join(','));
+    }
+    
+    // CSV dosyasını oluştur ve indir
+    const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
+    const downloadLink = document.createElement('a');
+    
+    downloadLink.download = 'islemlerim_' + new Date().toISOString().slice(0,10) + '.csv';
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = 'none';
+    
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  });
+</script>
+{% endblock %}

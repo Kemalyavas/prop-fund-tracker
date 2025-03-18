@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load tracker_tags %}
+{% block title %}Dashboard - Fon Takip Sistemi {%endblock %} 
+{% block content %}
+<div class="row mb-4">
+  <div class="col-md-12">
+    <h1 class="mb-4">Dashboard</h1>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Aktif Challenge'lar</h5>
+            <p class="card-text display-4">{{ active_challenges.count }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Fonlanan Hesaplar</h5>
+            <p class="card-text display-4">{{ funded_challenges.count }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Toplam Fonlanan Miktar</h5>
+            <p class="card-text display-4">
+              ${{ total_funded_amount|floatformat:0 }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-danger mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Başarısız Challenge'lar</h5>
+            <p class="card-text display-4">{{ failed_challenges.count }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0">Aktif Challenge'lar</h5>
+        <a href="{% url 'add_challenge' %}" class="btn btn-sm btn-primary">
+          <i class="fas fa-plus-circle me-1"></i>Yeni Challenge
+        </a>
+      </div>
+      <div class="card-body">
+        {% if active_challenges %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Firma</th>
+                <th>Challenge</th>
+                <th>Başlangıç</th>
+                <th>Kalan Gün</th>
+                <th>Bakiye</th>
+                <th>Kâr/Zarar</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for challenge in active_challenges %}
+              <tr>
+                <td>{{ challenge.challenge_type.provider.name }}</td>
+                <td>{{ challenge.challenge_type.name }}</td>
+                <td>{{ challenge.start_date }}</td>
+                <td>{{ challenge.days_remaining }} gün</td>
+                <td>${{ challenge.current_balance|floatformat:2 }}</td>
+                <td
+                  class="{% if challenge.profit_percentage > 0 %}text-success{% else %}text-danger{% endif %}"
+                >
+                  {{ challenge.profit_percentage|floatformat:2 }}%
+                </td>
+                <td>
+                  <a
+                    href="{% url 'challenge_detail' challenge.id %}"
+                    class="btn btn-sm btn-primary"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="fas fa-chart-line fa-3x mb-3 text-muted"></i>
+          <p class="mb-0">Henüz aktif challenge'ınız bulunmuyor.</p>
+          <a href="{% url 'add_challenge' %}" class="btn btn-primary mt-3">
+            <i class="fas fa-plus-circle me-1"></i>Yeni Challenge Ekle
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">Fonlanan Hesaplar</h5>
+      </div>
+      <div class="card-body">
+        {% if funded_challenges %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Firma</th>
+                <th>Challenge</th>
+                <th>Fonlama Tarihi</th>
+                <th>Bakiye</th>
+                <th>Kâr Payı</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for challenge in funded_challenges %}
+              <tr>
+                <td>{{ challenge.challenge_type.provider.name }}</td>
+                <td>{{ challenge.challenge_type.name }}</td>
+                <td>{{ challenge.funding_date }}</td>
+                <td>${{ challenge.current_balance|floatformat:2 }}</td>
+                <td>{{ challenge.profit_share_percentage }}%</td>
+                <td>
+                  <a
+                    href="{% url 'challenge_detail' challenge.id %}"
+                    class="btn btn-sm btn-primary"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a
+                    href="{% url 'request_withdrawal' challenge.id %}"
+                    class="btn btn-sm btn-success"
+                  >
+                    <i class="fas fa-money-bill-wave"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="fas fa-money-check-alt fa-3x mb-3 text-muted"></i>
+          <p>Henüz fonlanan hesabınız bulunmuyor.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Payout Özet Kartı -->
+<div class="col-md-3 mb-4">
+  <div class="card border-left-success shadow h-100 py-2">
+    <div class="card-body">
+      <div class="row no-gutters align-items-center">
+        <div class="col mr-2">
+          <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+            Toplam Payout
+          </div>
+          <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_payout|floatformat:2 }}</div>
+        </div>
+        <div class="col-auto">
+          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Son İşlemler</h5>
+      </div>
+      <div class="card-body">
+        {% if recent_trades %}
+        <ul class="list-group list-group-flush">
+          {% for trade in recent_trades %}
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <span
+                class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %} me-2"
+              >
+                {{ trade.get_trade_type_display }}
+              </span>
+              <strong>{{ trade.symbol }}</strong>
+              <small class="text-muted d-block"
+                >{{ trade.entry_date|date:"d.m.Y H:i" }}</small
+              >
+            </div>
+            <span
+              class="{% if trade.profit_loss > 0 %}text-success{% elif trade.profit_loss < 0 %}text-danger{% endif %}"
+            >
+              {% if trade.profit_loss %} {{ trade.profit_loss|floatformat:2 }}$
+              {% else %} Açık {% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="fas fa-exchange-alt fa-3x mb-3 text-muted"></i>
+          <p>Henüz işlem kaydınız bulunmuyor.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endblock %} {% block extra_js %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          // Get the context of the canvas element we want to select
+          var ctx = document.getElementById('challengeStatusChart').getContext('2d');
+          
+          // Challenge durumu grafiği
+          var challengeStatusChart = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                  labels: ['Aktif', 'Fonlanan', 'Tamamlanan', 'Başarısız'],
+                  datasets: [{
+                      data: [
+                          {{ active_challenges.count|safe }},
+                          {{ funded_challenges.count|safe }},
+                          {{ completed_challenges.count|safe }},
+                          {{ failed_challenges.count }}
+                      ],
+                      backgroundColor: [
+                          '#3498db',
+                          '#f39c12',
+                          '#2ecc71',
+                          '#e74c3c'
+                      ],
+                      borderWidth: 1
+                  }],
+              },
+              options: {
+                  responsive: true,
+                  plugins: {
+                      legend: {
+                          position: 'bottom'
+                      }
+                  }
+              }
+          });
+      });
+    </script>
+    {% endblock %}
+  </div>
+</div>
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">{{ challenge.challenge_type.name }}</h5>
+    <div class="progress mb-2">
+      <div class="progress-bar {% if profit_percentage|get_item:challenge.id < 0 %}bg-danger{% else %}bg-success{% endif %}" 
+           role="progressbar" 
+           style="width: {{ profit_percentage|get_item:challenge.id|abs }}%" 
+           aria-valuenow="{{ profit_percentage|get_item:challenge.id }}" 
+           aria-valuemin="0" 
+           aria-valuemax="100">
+        {{ profit_percentage|get_item:challenge.id }}%
+      </div>
+    </div>
+    <p class="card-text">
+      <strong>Başlangıç:</strong> ${{ challenge.challenge_type.account_size|floatformat:0 }}<br>
+      <strong>Güncel:</strong> ${{ challenge.current_balance|floatformat:0 }}<br>
+      <strong>Kar/Zarar:</strong> 
+      <span class="{% if profit_percentage|get_item:challenge.id < 0 %}text-danger{% else %}text-success{% endif %}">
+        {{ profit_percentage|get_item:challenge.id }}%
+      </span>
+    </p>
+    <a href="{% url 'challenge_detail' challenge.id %}" class="btn btn-primary btn-sm">Detaylar</a>
+    <a href="{% url 'add_trade' challenge.id %}" class="btn btn-success btn-sm">İşlem Ekle</a>
+    <a href="{% url 'delete_challenge' challenge.id %}" class="btn btn-danger btn-sm">
+      <i class="fas fa-trash-alt me-1"></i>Sil
+    </a>
+  </div>
+</div>
